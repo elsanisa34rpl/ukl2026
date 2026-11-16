@@ -21,8 +21,8 @@ class ItemCard extends StatelessWidget {
     final available = item.status == 'Available';
 
     return Container(
-      width: 178,
-      margin: const EdgeInsets.only(right: 12),
+      width: double.infinity,
+      margin: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),

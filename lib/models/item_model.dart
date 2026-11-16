@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ItemModel {
@@ -23,31 +22,27 @@ class ItemModel {
   });
 
   factory ItemModel.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-
+    final data = doc.data() as Map<String, dynamic>? ?? {};
     return ItemModel(
       id: doc.id,
-      itemName: data['item_name'] ?? '',
-      category: data['category'] ?? '',
-      code: data['code'] ?? '',
-      status: data['status'] ?? 'Available',
-      image: data['image'] ?? '',
-      spesification: data['spesification'] ?? '',
-      createdAt: data['created_at'],
+      itemName: (data['item_name'] ?? '').toString(),
+      category: (data['category'] ?? 'Lainnya').toString(),
+      code: (data['code'] ?? '').toString(),
+      status: (data['status'] ?? 'Available').toString(),
+      image: (data['image'] ?? '').toString(),
+      spesification: (data['spesification'] ?? '').toString(),
+      createdAt: data['created_at'] is Timestamp ? data['created_at'] as Timestamp : null,
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'item_id': id,
-      'item_name': itemName,
-      'category': category,
-      'code': code,
-      'status': status,
-      'image': image,
-      'spesification': spesification,
-      'created_at': createdAt ??
-          FieldValue.serverTimestamp(),
-    };
-  }
+  Map<String, dynamic> toMap() => {
+    'item_id': id,
+    'item_name': itemName,
+    'category': category,
+    'code': code,
+    'status': status,
+    'image': image,
+    'spesification': spesification,
+    'created_at': createdAt ?? FieldValue.serverTimestamp(),
+  };
 }
