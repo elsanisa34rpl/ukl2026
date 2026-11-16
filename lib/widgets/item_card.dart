@@ -14,19 +14,19 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final available = item.status == 'Available';
+    final statusColor = available ? AppColors.available : AppColors.borrowed;
+
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(21),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ItemDetailPage(item: item))),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border.withValues(alpha: .75)),
-            boxShadow: [BoxShadow(color: const Color(0xFF1D3557).withValues(alpha: .045), blurRadius: 14, offset: const Offset(0, 5))],
+            borderRadius: BorderRadius.circular(21),
+            border: Border.all(color: AppColors.border),
           ),
-          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -39,17 +39,26 @@ class ItemCard extends StatelessWidget {
                       top: 10,
                       left: 10,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .94), borderRadius: BorderRadius.circular(20)),
-                        child: Text(item.category, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.navy)),
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                        decoration: BoxDecoration(color: const Color(0xFFF7F3EC).withValues(alpha: .96), borderRadius: BorderRadius.circular(30)),
+                        child: Text(item.category, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.navy)),
+                      ),
+                    ),
+                    Positioned(
+                      right: 10,
+                      bottom: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                        decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(30)),
+                        child: Text(available ? 'Tersedia' : 'Dipinjam', style: const TextStyle(fontSize: 9, color: Colors.white, fontWeight: FontWeight.w800)),
                       ),
                     ),
                     if (showActions)
                       Positioned(
-                        top: 4,
-                        right: 4,
+                        top: 5,
+                        right: 5,
                         child: Material(
-                          color: Colors.white.withValues(alpha: .95),
+                          color: Colors.white,
                           shape: const CircleBorder(),
                           child: IconButton(
                             visualDensity: VisualDensity.compact,
@@ -66,21 +75,14 @@ class ItemCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item.itemName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.navy)),
-                    const SizedBox(height: 4),
-                    Text(item.code, style: const TextStyle(fontSize: 10, color: AppColors.muted, letterSpacing: .4)),
-                    const SizedBox(height: 9),
+                    Text(item.itemName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: AppColors.navy)),
+                    const SizedBox(height: 5),
                     Row(
                       children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(color: available ? AppColors.available : AppColors.borrowed, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(available ? 'Tersedia' : 'Sedang dipinjam', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: available ? AppColors.available : AppColors.borrowed)),
-                        const Spacer(),
-                        const Icon(Icons.arrow_forward_rounded, size: 15, color: AppColors.muted),
+                        const Icon(Icons.qr_code_2_rounded, size: 13, color: AppColors.muted),
+                        const SizedBox(width: 4),
+                        Expanded(child: Text(item.code, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: AppColors.muted, letterSpacing: .3))),
+                        const Icon(Icons.arrow_outward_rounded, size: 15, color: AppColors.primary),
                       ],
                     ),
                   ],
