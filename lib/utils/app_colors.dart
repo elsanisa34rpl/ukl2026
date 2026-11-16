@@ -1,15 +1,15 @@
-
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFF3478F6);
-  static const Color navy = Color(0xFF172B5B);
-  static const Color secondary = Color(0xFF7867E8);
-
-  static const Color background = Color(0xFFF4F7FE);
-  static const Color text = Color(0xFF202B45);
-  static const Color muted = Color(0xFF8792A8);
-
-  static const Color available = Color(0xFF16A779);
-  static const Color borrowed = Color(0xFFE99A32);
+  static const Color primary = Color(0xFFE8758B);
+  static const Color primaryDark = Color(0xFFC65F80);
+  static const Color navy = Color(0xFF405F7C);
+  static const Color secondary = Color(0xFF806681);
+  static const Color background = Color(0xFFFFF8F8);
+  static const Color surface = Colors.white;
+  static const Color text = Color(0xFF303443);
+  static const Color muted = Color(0xFF858895);
+  static const Color available = Color(0xFF348B68);
+  static const Color borrowed = Color(0xFFC36A86);
+  static const Color border = Color(0xFFF1E8EA);
 }
