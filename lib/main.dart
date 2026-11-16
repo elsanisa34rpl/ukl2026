@@ -35,9 +35,9 @@ class LabTrackApp extends StatelessWidget {
         ),
         fontFamily: 'Roboto',
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.navy,
-          foregroundColor: Colors.white,
-          centerTitle: true,
+          backgroundColor: Colors.white,
+          foregroundColor: AppColors.navy,
+          centerTitle: false,
           elevation: 0,
           surfaceTintColor: Colors.transparent,
         ),
