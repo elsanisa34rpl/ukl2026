@@ -29,12 +29,14 @@ class _MainShellState extends State<MainShell> {
         children: _pages,
       ),
       bottomNavigationBar: NavigationBar(
-        height: 68,
+        height: 76,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() => _selectedIndex = index);
         },
         backgroundColor: Colors.white,
+        elevation: 3,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         indicatorColor: AppColors.primary.withValues(alpha: 0.10),
         destinations: const [
           NavigationDestination(
