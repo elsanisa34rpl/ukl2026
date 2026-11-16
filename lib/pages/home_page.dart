@@ -1,10 +1,10 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/item_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/item_card.dart';
+import 'item_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,11 +14,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final _service = FirestoreService();
-  final _search = TextEditingController();
+  final FirestoreService _service = FirestoreService();
+  final TextEditingController _search = TextEditingController();
 
   String _category = 'Semua';
-  String _status = 'Semua';
 
   @override
   void dispose() {
@@ -29,263 +28,209 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: StreamBuilder<List<ItemModel>>(
-          stream: _service.getItems(),
-          builder: (context, snapshot) {
-            final items = snapshot.data ?? [];
+      body: StreamBuilder<List<ItemModel>>(
+        stream: _service.getItems(),
+        builder: (context, snapshot) {
+          final items = snapshot.data ?? [];
 
-            final filtered = items.where((item) {
-              final searchMatch = item.itemName
-                  .toLowerCase()
-                  .contains(_search.text.toLowerCase());
+          final filtered = items.where((item) {
+            final query = _search.text.toLowerCase();
 
-              final categoryMatch =
-                  _category == 'Semua' ||
-                  item.category == _category;
+            final matchSearch =
+                item.itemName.toLowerCase().contains(query) ||
+                item.code.toLowerCase().contains(query) ||
+                item.category.toLowerCase().contains(query);
 
-              final statusMatch =
-                  _status == 'Semua' ||
-                  item.status == _status;
+            final matchCategory =
+                _category == 'Semua' ||
+                item.category == _category;
 
-              return searchMatch &&
-                  categoryMatch &&
-                  statusMatch;
-            }).toList();
+            return matchSearch && matchCategory;
+          }).toList();
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'LABORATORY APP',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                        SizedBox(height: 5),
-                        Text(
-                          'Explore Equipment',
-                          style: TextStyle(
-                            fontSize: 23,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.navy,
-                          ),
-                        ),
+          final categories = [
+            'Semua',
+            ...items.map((e) => e.category).toSet(),
+          ];
+
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.secondary,
                       ],
                     ),
-
-                    Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Icon(
-                        Icons.biotech,
-                        color: AppColors.primary,
+                  ),
+                  child: SafeArea(
+                    bottom: false,
+                    child: TextField(
+                      controller: _search,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama, kode, atau kategori...',
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.primaryDark,
+                        ),
+                        fillColor: Colors.white,
+                        filled: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(17),
+                          borderSide: BorderSide.none,
+                        ),
                       ),
                     ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                TextField(
-                  controller: _search,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.search),
-                    hintText: 'Cari nama alat inventaris...',
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 20),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _banner(),
 
-                SizedBox(
-                  height: 150,
-                  child: PageView(
-                    children: [
-                      _banner(
-                        'Manage Your Lab',
-                        'Semua alat laboratorium dalam satu aplikasi.',
-                        Icons.science,
+                    const SizedBox(height: 23),
+
+                    _title('Semua Data'),
+
+                    if (snapshot.hasError)
+                      const Text('Gagal memuat data inventaris.')
+                    else if (!snapshot.hasData)
+                      const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (filtered.isEmpty)
+                      const Text('Belum ada alat yang sesuai.')
+                    else
+                      SizedBox(
+                        height: 230,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final item = filtered[index];
+
+                            return InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ItemDetailPage(item: item),
+                                  ),
+                                );
+                              },
+                              child: ItemCard(item: item),
+                            );
+                          },
+                        ),
                       ),
-                      _banner(
-                        'Find Equipment',
-                        'Cari alat dengan cepat dan mudah.',
-                        Icons.search_rounded,
+
+                    const SizedBox(height: 22),
+
+                    _title('Kategori Peralatan'),
+
+                    SizedBox(
+                      height: 110,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final category = categories[index];
+
+                          final count = category == 'Semua'
+                              ? items.length
+                              : items
+                                  .where((e) => e.category == category)
+                                  .length;
+
+                          return _categoryCard(
+                            category,
+                            count,
+                            category == _category,
+                          );
+                        },
                       ),
-                      _banner(
-                        'Stay Organized',
-                        'Pantau ketersediaan inventaris secara real-time.',
-                        Icons.inventory_2,
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 22),
-
-                _sectionTitle('Ringkasan Inventaris'),
-
-                Row(
-                  children: [
-                    _statCard(
-                      'Total Alat',
-                      '${items.length}',
-                      Icons.widgets_rounded,
-                      AppColors.primary,
                     ),
 
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 22),
 
-                    _statCard(
+                    _sectionWithItems(
                       'Available',
-                      '${items.where((e) => e.status == 'Available').length}',
-                      Icons.check_circle_outline,
+                      items.where((e) => e.status == 'Available').toList(),
                       AppColors.available,
+                      Icons.check_circle,
                     ),
 
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 22),
 
-                    _statCard(
+                    _sectionWithItems(
                       'Borrowed',
-                      '${items.where((e) => e.status == 'Borrowed').length}',
-                      Icons.access_time,
+                      items.where((e) => e.status == 'Borrowed').toList(),
                       AppColors.borrowed,
+                      Icons.lock_clock,
                     ),
-                  ],
+                  ]),
                 ),
-
-                const SizedBox(height: 22),
-
-                _sectionTitle('Kategori Peralatan'),
-
-                _chips(
-                  ['Semua', 'Elektronik', 'Optik', 'Pengukuran', 'Komponen'],
-                  _category,
-                  (v) => setState(() => _category = v),
-                ),
-
-                const SizedBox(height: 18),
-
-                _sectionTitle('Status Alat'),
-
-                _chips(
-                  ['Semua', 'Available', 'Borrowed'],
-                  _status,
-                  (v) => setState(() => _status = v),
-                ),
-
-                const SizedBox(height: 18),
-
-                _sectionTitle('Semua Data'),
-
-                if (snapshot.hasError)
-                  const Text('Gagal mengambil data inventaris.')
-
-                else if (snapshot.connectionState ==
-                        ConnectionState.waiting &&
-                    !snapshot.hasData)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(25),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-
-                else if (filtered.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      'Belum ada alat yang cocok dengan pencarian.',
-                    ),
-                  )
-
-                else
-                  ...filtered
-                      .take(5)
-                      .map((item) => ItemCard(item: item)),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _banner(
-    String title,
-    String subtitle,
-    IconData icon,
-  ) {
+  Widget _banner() {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.all(20),
+      height: 165,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          colors: [
-            AppColors.navy,
-            AppColors.primary,
-            AppColors.secondary,
-          ],
+        image: const DecorationImage(
+          image: NetworkImage(
+            'https://images.unsplash.com/photo-1581093458791-9d42e3c5e3b4?w=1200',
+          ),
+          fit: BoxFit.cover,
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 21,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+      child: Container(
+        alignment: Alignment.bottomLeft,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(22),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withValues(alpha: 0.65),
+            ],
           ),
-
-          Icon(
-            icon,
-            color: Colors.white70,
-            size: 48,
+        ),
+        child: const Text(
+          'Pinjam Alat dengan Mudah',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _sectionTitle(String title) {
+  Widget _title(String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 13),
       child: Text(
-        title,
+        value,
         style: const TextStyle(
-          fontSize: 17,
+          fontSize: 18,
           fontWeight: FontWeight.bold,
           color: AppColors.navy,
         ),
@@ -293,36 +238,60 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _statCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
+  Widget _categoryCard(
+    String category,
+    int count,
+    bool selected,
   ) {
-    return Expanded(
+    final icons = {
+      'Arduino': Icons.memory,
+      'Laptop': Icons.laptop,
+      'Mikroskop': Icons.biotech,
+      'Multimeter': Icons.electrical_services,
+      'Oscilloscope': Icons.settings_input_component,
+      'Perkakas': Icons.handyman,
+      'Router': Icons.router,
+      'Semua': Icons.grid_view,
+    };
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _category = category);
+      },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 9,
-        ),
+        width: 112,
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: selected ? const Color(0xFFFDECEF) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+            ),
+          ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 21),
-            const SizedBox(height: 8),
+            Icon(
+              icons[category] ?? Icons.devices_other,
+              color: AppColors.secondary,
+              size: 25,
+            ),
+            const SizedBox(height: 7),
             Text(
-              value,
+              category,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 19,
                 fontWeight: FontWeight.bold,
-                color: AppColors.navy,
+                fontSize: 12,
               ),
             ),
             Text(
-              title,
+              '$count alat',
               style: const TextStyle(
                 fontSize: 10,
                 color: AppColors.muted,
@@ -334,34 +303,62 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _chips(
-    List<String> values,
-    String selected,
-    Function(String) onTap,
+  Widget _sectionWithItems(
+    String title,
+    List<ItemModel> items,
+    Color color,
+    IconData icon,
   ) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: values.map((value) {
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: Text(value),
-              selected: selected == value,
-              onSelected: (_) => onTap(value),
-              selectedColor: AppColors.primary.withValues(alpha: .15),
-              labelStyle: TextStyle(
-                color: selected == value
-                    ? AppColors.primary
-                    : AppColors.text,
-                fontWeight: FontWeight.w600,
-              ),
-              side: BorderSide.none,
-              backgroundColor: Colors.white,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 9),
+            Expanded(
+              child: _title(title),
             ),
-          );
-        }).toList(),
-      ),
+            Text(
+              '${items.length} alat',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        if (items.isEmpty)
+          const Text(
+            'Belum ada data.',
+            style: TextStyle(color: AppColors.muted),
+          )
+        else
+          SizedBox(
+            height: 220,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ItemDetailPage(item: item),
+                      ),
+                    );
+                  },
+                  child: ItemCard(item: item),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

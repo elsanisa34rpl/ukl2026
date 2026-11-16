@@ -1,6 +1,5 @@
-
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
@@ -58,29 +57,24 @@ class _RegisterPageState extends State<RegisterPage> {
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message ?? 'Register gagal.'),
-        ),
-      );
+      _message(e.message ?? 'Pendaftaran gagal.');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      _message('Terjadi kesalahan: $e');
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _message(String value) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(value)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Buat Akun'),
-        backgroundColor: AppColors.background,
-      ),
+      appBar: AppBar(title: const Text('Buat Akun')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -90,49 +84,32 @@ class _RegisterPageState extends State<RegisterPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Join LabTrack',
+                  'Gabung dengan LabTrack',
                   style: TextStyle(
-                    fontSize: 29,
-                    fontWeight: FontWeight.bold,
                     color: AppColors.navy,
+                    fontSize: 27,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 const Text(
                   'Lengkapi data diri untuk membuat akun.',
                   style: TextStyle(color: AppColors.muted),
                 ),
-
                 const SizedBox(height: 25),
-
-                _field(
-                  'Nama lengkap',
-                  _name,
-                  Icons.person_outline,
-                ),
-
-                _field(
-                  'Kelas',
-                  _kelas,
-                  Icons.school_outlined,
-                ),
-
+                _field('Nama lengkap', _name, Icons.person_outline),
+                _field('Kelas', _kelas, Icons.school_outlined),
                 _field(
                   'Email',
                   _email,
                   Icons.email_outlined,
                   type: TextInputType.emailAddress,
                 ),
-
                 const Text(
                   'Password',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-
                 const SizedBox(height: 8),
-
                 TextFormField(
                   controller: _password,
                   obscureText: _hidePassword,
@@ -152,16 +129,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                   ),
-                  validator: (v) {
-                    if (v == null || v.length < 6) {
+                  validator: (value) {
+                    if (value == null || value.length < 6) {
                       return 'Password minimal 6 karakter.';
                     }
                     return null;
                   },
                 ),
-
                 const SizedBox(height: 25),
-
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -204,9 +179,7 @@ class _RegisterPageState extends State<RegisterPage> {
             label,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-
           const SizedBox(height: 8),
-
           TextFormField(
             controller: controller,
             keyboardType: type,
@@ -214,8 +187,8 @@ class _RegisterPageState extends State<RegisterPage> {
               prefixIcon: Icon(icon),
               hintText: 'Masukkan $label',
             ),
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) {
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
                 return '$label wajib diisi.';
               }
               return null;

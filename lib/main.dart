@@ -5,10 +5,13 @@ import 'firebase_options.dart';
 import 'pages/splash_page.dart';
 import 'utils/app_colors.dart';
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(const LabTrackApp());
 }
@@ -21,12 +24,23 @@ class LabTrackApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LabTrack',
-
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 129, 130, 131)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: Colors.white,
+        ),
         fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.navy,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
@@ -40,7 +54,6 @@ class LabTrackApp extends StatelessWidget {
           ),
         ),
       ),
-
       home: const SplashPage(),
     );
   }

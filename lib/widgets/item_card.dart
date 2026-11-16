@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/item_model.dart';
 import '../utils/app_colors.dart';
 import '../pages/item_form_page.dart';
+import '../pages/item_detail_page.dart';
+import 'item_image.dart';
 
 class ItemCard extends StatelessWidget {
   final ItemModel item;
@@ -17,51 +18,47 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAvailable = item.status == 'Available';
+    final available = item.status == 'Available';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 13),
+      width: 178,
+      margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.045),
+            blurRadius: 9,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ItemDetailPage(item: item),
+            ),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(13),
-              child: item.image.isEmpty
-                  ? Container(
-                      width: 88,
-                      height: 88,
-                      color: AppColors.background,
-                      child: const Icon(
-                        Icons.devices_other,
-                        size: 35,
-                      ),
-                    )
-                  : Image.network(
-                      item.image,
-                      width: 88,
-                      height: 88,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) {
-                        return Container(
-                          width: 88,
-                          height: 88,
-                          color: AppColors.background,
-                          child: const Icon(
-                            Icons.image_not_supported,
-                          ),
-                        );
-                      },
-                    ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(18),
+              ),
+              child: ItemImage(
+                item: item,
+                height: 115,
+                width: double.infinity,
+              ),
             ),
-
-            const SizedBox(width: 13),
-
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(11),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -70,67 +67,66 @@ class ItemCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
+                      color: AppColors.text,
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: AppColors.navy,
+                      fontSize: 13,
                     ),
                   ),
-
                   const SizedBox(height: 5),
-
                   Text(
-                    '${item.category} • ${item.code}',
+                    item.code,
                     style: const TextStyle(
                       color: AppColors.muted,
-                      fontSize: 12,
+                      fontSize: 11,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
+                  _statusBadge(available),
+                  if (showActions)
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ItemFormPage(item: item),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: (isAvailable
-                              ? AppColors.available
-                              : AppColors.borrowed)
-                          .withValues(alpha: .12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      item.status,
-                      style: TextStyle(
-                        color: isAvailable
-                            ? AppColors.available
-                            : AppColors.borrowed,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
-
-            if (showActions)
-              IconButton(
-                icon: const Icon(
-                  Icons.edit_outlined,
-                  color: AppColors.primary,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ItemFormPage(item: item),
-                    ),
-                  );
-                },
-              ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statusBadge(bool available) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: available
+            ? AppColors.available.withValues(alpha: 0.12)
+            : AppColors.borrowed.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        item.status,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: available
+              ? AppColors.available
+              : AppColors.borrowed,
         ),
       ),
     );

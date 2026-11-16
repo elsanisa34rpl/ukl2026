@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/item_model.dart';
 import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
-import '../widgets/item_card.dart';
+import '../widgets/item_image.dart';
 import 'item_form_page.dart';
+import 'item_detail_page.dart';
 
 class InventoryPage extends StatelessWidget {
   const InventoryPage({super.key});
@@ -16,17 +16,12 @@ class InventoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Inventaris Alat',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.navy,
-          ),
-        ),
-        backgroundColor: AppColors.background,
+        automaticallyImplyLeading: false,
+        title: const Text('Inventaris'),
       ),
-
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
             context,
@@ -35,170 +30,216 @@ class InventoryPage extends StatelessWidget {
             ),
           );
         },
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Tambah Alat'),
+        child: const Icon(Icons.add),
       ),
-
       body: StreamBuilder<List<ItemModel>>(
         stream: service.getItems(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(
-              child: Text('Terjadi kesalahan: ${snapshot.error}'),
+            return const Center(
+              child: Text('Gagal mengambil data inventaris.'),
             );
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              !snapshot.hasData) {
+          if (!snapshot.hasData) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
 
-          final items = snapshot.data ?? [];
+          final items = snapshot.data!;
 
           if (items.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(25),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.inventory_2_outlined,
-                      size: 65,
-                      color: AppColors.muted,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    const Text(
-                      'Belum ada data inventaris.',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    const Text(
-                      'Tambahkan data contoh ke Firestore untuk memulai.',
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          await service.seedDummyItems();
-
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Data dummy berhasil ditambahkan.',
-                                ),
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Gagal: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Isi Data Dummy'),
-                    ),
-                  ],
-                ),
-              ),
+            return const Center(
+              child: Text('Belum ada data inventaris.'),
             );
           }
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(18, 12, 18, 90),
-            children: [
-              Text(
-                '${items.length} alat terdaftar di database',
-                style: const TextStyle(
-                  color: AppColors.muted,
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 17, 16, 90),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 13),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(19),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.045),
+                      blurRadius: 9,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-              ),
-
-              const SizedBox(height: 14),
-
-              ...items.map(
-                (item) => Dismissible(
-                  key: ValueKey(item.id),
-                  direction: DismissDirection.endToStart,
-
-                  background: Container(
-                    margin: const EdgeInsets.only(bottom: 13),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 22),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: const Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  confirmDismiss: (_) async {
-                    return await _confirmDelete(context);
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(19),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ItemDetailPage(item: item),
+                      ),
+                    );
                   },
-
-                  onDismissed: (_) async {
-                    await service.deleteItem(item.id);
-
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Data alat berhasil dihapus.'),
+                  child: Padding(
+                    padding: const EdgeInsets.all(11),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(13),
+                          child: ItemImage(
+                            item: item,
+                            width: 80,
+                            height: 80,
+                          ),
                         ),
-                      );
-                    }
-                  },
+                        const SizedBox(width: 13),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.itemName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.text,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${item.code} • ${item.category}',
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              _badge(item.status),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: AppColors.navy,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ItemFormPage(item: item),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () async {
+                                final confirm =
+                                    await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Hapus Alat'),
+                                    content: Text(
+                                      'Yakin ingin menghapus ${item.itemName}?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Batal'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text(
+                                          'Hapus',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
 
-                  child: ItemCard(
-                    item: item,
-                    showActions: true,
+                                if (confirm == true) {
+                                  try {
+                                    await service.deleteItem(item.id);
+
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Alat berhasil dihapus.',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text('Gagal: $e'),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           );
         },
       ),
     );
   }
 
-  Future<bool> _confirmDelete(BuildContext context) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Hapus inventaris?'),
-            content: const Text(
-              'Data alat yang dihapus tidak dapat dikembalikan.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Batal'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Hapus'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
+  Widget _badge(String status) {
+    final available = status == 'Available';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 11,
+        vertical: 5,
+      ),
+      decoration: BoxDecoration(
+        color: available
+            ? const Color(0xFFE1F3E9)
+            : const Color(0xFFF8E3EA),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: available
+              ? AppColors.available
+              : AppColors.borrowed,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+        ),
+      ),
+    );
   }
 }

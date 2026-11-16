@@ -1,7 +1,7 @@
+import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
 import 'main_shell.dart';
@@ -15,46 +15,31 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  Timer? _sessionTimer;
+
   @override
   void initState() {
     super.initState();
-    _checkSession();
-  }
-
-  Future<void> _checkSession() async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (!mounted) return;
-
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
+    _sessionTimer = Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
 
-      if (userDoc.exists) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const MainShell(),
-          ),
-        );
-        return;
-      }
-    }
+      final user = FirebaseAuth.instance.currentUser;
 
-    if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => user != null
+              ? const MainShell()
+              : const LoginPage(),
+        ),
+      );
+    });
+  }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LoginPage(),
-      ),
-    );
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -65,7 +50,6 @@ class _SplashPageState extends State<SplashPage> {
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.navy,
               AppColors.primary,
               AppColors.secondary,
             ],
@@ -79,7 +63,7 @@ class _SplashPageState extends State<SplashPage> {
             Container(
               padding: const EdgeInsets.all(25),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .16),
+                color: Colors.white.withValues(alpha: 0.18),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

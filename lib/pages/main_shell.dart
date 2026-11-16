@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
@@ -29,35 +28,37 @@ class _MainShellState extends State<MainShell> {
         index: _selectedIndex,
         children: _pages,
       ),
-
       bottomNavigationBar: NavigationBar(
+        height: 68,
         selectedIndex: _selectedIndex,
-
         onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         },
-
         backgroundColor: Colors.white,
-        indicatorColor: AppColors.primary.withValues(alpha: .13),
-
+        indicatorColor: AppColors.primary.withValues(alpha: 0.10),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            selectedIcon: Icon(
+              Icons.home,
+              color: AppColors.primary,
+            ),
             label: 'Beranda',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
+            selectedIcon: Icon(
+              Icons.inventory_2,
+              color: AppColors.primary,
+            ),
             label: 'Inventaris',
           ),
-
           NavigationDestination(
             icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            selectedIcon: Icon(
+              Icons.person,
+              color: AppColors.primary,
+            ),
             label: 'Profil',
           ),
         ],

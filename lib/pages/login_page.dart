@@ -1,6 +1,5 @@
-
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../utils/app_colors.dart';
@@ -16,7 +15,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _email = TextEditingController();
   final _password = TextEditingController();
 
@@ -38,10 +36,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _loading = true);
 
     try {
-      await _auth.login(
-        _email.text,
-        _password.text,
-      );
+      await _auth.login(_email.text, _password.text);
 
       if (!mounted) return;
 
@@ -53,17 +48,15 @@ class _LoginPageState extends State<LoginPage> {
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
-      _showMessage(e.message ?? 'Login gagal.');
+      _message(e.message ?? 'Login gagal.');
     } catch (e) {
-      _showMessage('Terjadi kesalahan: $e');
+      _message('Terjadi kesalahan: $e');
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _showMessage(String message) {
+  void _message(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -75,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(25),
             child: Form(
               key: _formKey,
               child: Column(
@@ -83,8 +76,8 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Center(
                     child: Container(
-                      width: 86,
-                      height: 86,
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
@@ -95,40 +88,32 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(26),
                       ),
                       child: const Icon(
-                        Icons.biotech_rounded,
+                        Icons.biotech,
                         color: Colors.white,
-                        size: 45,
+                        size: 48,
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 28),
-
                   const Text(
-                    'Welcome Back!',
+                    'Selamat Datang!',
                     style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
                       color: AppColors.navy,
+                      fontSize: 29,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 8),
-
+                  const SizedBox(height: 7),
                   const Text(
-                    'Login untuk mengelola inventaris laboratorium.',
+                    'Masuk untuk mengelola inventaris laboratorium.',
                     style: TextStyle(color: AppColors.muted),
                   ),
-
                   const SizedBox(height: 30),
-
                   const Text(
                     'Email',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-
                   const SizedBox(height: 8),
-
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
@@ -136,23 +121,19 @@ class _LoginPageState extends State<LoginPage> {
                       prefixIcon: Icon(Icons.email_outlined),
                       hintText: 'Masukkan email',
                     ),
-                    validator: (v) {
-                      if (v == null || !v.contains('@')) {
+                    validator: (value) {
+                      if (value == null || !value.contains('@')) {
                         return 'Masukkan email yang valid.';
                       }
                       return null;
                     },
                   ),
-
                   const SizedBox(height: 18),
-
                   const Text(
                     'Password',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
-
                   const SizedBox(height: 8),
-
                   TextFormField(
                     controller: _password,
                     obscureText: _hidePassword,
@@ -172,16 +153,14 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                     ),
-                    validator: (v) {
-                      if (v == null || v.length < 6) {
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
                         return 'Password minimal 6 karakter.';
                       }
                       return null;
                     },
                   ),
-
                   const SizedBox(height: 25),
-
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -206,9 +185,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                     ),
                   ),
-
-                  const SizedBox(height: 18),
-
+                  const SizedBox(height: 15),
                   Center(
                     child: TextButton(
                       onPressed: () {

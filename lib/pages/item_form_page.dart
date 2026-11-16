@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../models/item_model.dart';
@@ -26,10 +25,10 @@ class _ItemFormPageState extends State<ItemFormPage> {
   final _image = TextEditingController();
   final _specification = TextEditingController();
 
+  final _service = FirestoreService();
+
   String _status = 'Available';
   bool _loading = false;
-
-  final _service = FirestoreService();
 
   @override
   void initState() {
@@ -54,7 +53,6 @@ class _ItemFormPageState extends State<ItemFormPage> {
     _code.dispose();
     _image.dispose();
     _specification.dispose();
-
     super.dispose();
   }
 
@@ -96,15 +94,11 @@ class _ItemFormPageState extends State<ItemFormPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal menyimpan data: $e'),
-          ),
+          SnackBar(content: Text('Gagal menyimpan data: $e')),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -114,59 +108,28 @@ class _ItemFormPageState extends State<ItemFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isEdit ? 'Edit Inventaris' : 'Tambah Inventaris',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.navy,
-          ),
-        ),
-        backgroundColor: AppColors.background,
+        title: Text(isEdit ? 'Edit Inventaris' : 'Tambah Inventaris'),
       ),
-
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _input(
-              'Nama alat',
-              _name,
-              'Contoh: Laptop ASUS',
-            ),
-
-            _input(
-              'Kategori',
-              _category,
-              'Contoh: Elektronik',
-            ),
-
-            _input(
-              'Kode alat',
-              _code,
-              'Contoh: LAB007',
-            ),
-
-            _input(
-              'URL gambar',
-              _image,
-              'https://...',
-            ),
-
+            _input('Nama alat', _name, 'Contoh: Laptop ASUS'),
+            _input('Kategori', _category, 'Contoh: Elektronik'),
+            _input('Kode alat', _code, 'Contoh: LAB007'),
+            _input('URL gambar', _image, 'https://...'),
             _input(
               'Spesifikasi',
               _specification,
               'Tuliskan spesifikasi alat',
               maxLines: 3,
             ),
-
             const Text(
               'Status alat',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-
             const SizedBox(height: 8),
-
             DropdownButtonFormField<String>(
               initialValue: _status,
               decoration: const InputDecoration(
@@ -188,9 +151,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
                 });
               },
             ),
-
             const SizedBox(height: 25),
-
             SizedBox(
               height: 52,
               child: ElevatedButton(
@@ -207,9 +168,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
                         color: Colors.white,
                       )
                     : Text(
-                        isEdit
-                            ? 'Simpan Perubahan'
-                            : 'Tambah Alat',
+                        isEdit ? 'Simpan Perubahan' : 'Tambah Alat',
                       ),
               ),
             ),
@@ -232,19 +191,13 @@ class _ItemFormPageState extends State<ItemFormPage> {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-
           const SizedBox(height: 8),
-
           TextFormField(
             controller: controller,
             maxLines: maxLines,
-            decoration: InputDecoration(
-              hintText: hint,
-            ),
+            decoration: InputDecoration(hintText: hint),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return '$label wajib diisi.';
