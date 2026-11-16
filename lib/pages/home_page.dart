@@ -6,6 +6,7 @@ import '../widgets/item_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -33,10 +34,10 @@ class _HomePageState extends State<HomePage> {
           final categories = ['Semua', ...categoryList];
           final query = _search.text.trim().toLowerCase();
           final visible = items.where((item) {
-            final matchesSearch = item.itemName.toLowerCase().contains(query) ||
+            final matches = item.itemName.toLowerCase().contains(query) ||
                 item.code.toLowerCase().contains(query) ||
                 item.category.toLowerCase().contains(query);
-            return matchesSearch && (_category == 'Semua' || item.category == _category);
+            return matches && (_category == 'Semua' || item.category == _category);
           }).toList();
           final available = items.where((e) => e.status == 'Available').length;
           final borrowed = items.length - available;
@@ -47,63 +48,62 @@ class _HomePageState extends State<HomePage> {
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             Container(
-                              height: 42,
-                              width: 42,
+                              width: 45,
+                              height: 45,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: .10),
-                                borderRadius: BorderRadius.circular(14),
+                                color: AppColors.navy,
+                                borderRadius: BorderRadius.circular(15),
                               ),
-                              child: const Icon(Icons.science_outlined, color: AppColors.primary),
+                              child: const Icon(Icons.science_rounded, color: Color(0xFFF7E7D6), size: 24),
                             ),
-                            const SizedBox(width: 11),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('LABTRACK', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2, color: AppColors.navy)),
-                                Text('Laboratory inventory system', style: TextStyle(fontSize: 11, color: AppColors.muted)),
-                              ],
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('LABTRACK', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, letterSpacing: 1.8, color: AppColors.navy)),
+                                  Text('Laboratory management', style: TextStyle(fontSize: 11, color: AppColors.muted)),
+                                ],
+                              ),
                             ),
-                            const Spacer(),
                             Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
-                              child: const Icon(Icons.notifications_none_rounded, color: AppColors.navy),
+                              padding: const EdgeInsets.all(11),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+                              child: const Icon(Icons.notifications_none_rounded, color: AppColors.navy, size: 21),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 22),
+                        const SizedBox(height: 24),
+                        const Text('GOOD DAY, EXPLORER', style: TextStyle(fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                        const SizedBox(height: 7),
+                        const Text('Kelola lab dengan\nlebih terorganisir.', style: TextStyle(fontSize: 27, height: 1.12, fontWeight: FontWeight.w900, color: AppColors.navy, letterSpacing: -.7)),
+                        const SizedBox(height: 17),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Container(
+                          borderRadius: BorderRadius.circular(25),
+                          child: SizedBox(
                             height: 178,
                             width: double.infinity,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Color(0xFF173A80), Color(0xFF287BC4), Color(0xFF22A9B7)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
                             child: Stack(
+                              fit: StackFit.expand,
                               children: [
-                                Positioned(
-                                  right: -24,
-                                  top: -16,
-                                  bottom: -16,
-                                  width: 190,
-                                  child: Opacity(
-                                    opacity: .34,
-                                    child: Image.network(
-                                      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=700',
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const SizedBox(),
+                                Image.network(
+                                  'https://images.unsplash.com/photo-1581093458791-9d42e3c7b7a5?w=1200&auto=format&fit=crop',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(color: AppColors.secondary),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [AppColors.navy.withValues(alpha: .94), AppColors.navy.withValues(alpha: .12)],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
                                     ),
                                   ),
                                 ),
@@ -114,14 +114,14 @@ class _HomePageState extends State<HomePage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .16), borderRadius: BorderRadius.circular(20)),
-                                        child: const Text('PUSAT INVENTARIS LAB', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(color: const Color(0xFFE8B18F), borderRadius: BorderRadius.circular(30)),
+                                        child: const Text('SMART LAB SPACE', style: TextStyle(color: AppColors.navy, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
                                       ),
                                       const SizedBox(height: 12),
-                                      const Text('Kelola alat lab\nlebih mudah.', style: TextStyle(color: Colors.white, fontSize: 23, height: 1.15, fontWeight: FontWeight.w800)),
+                                      const Text('Semua alat,\nsatu kendali.', style: TextStyle(color: Colors.white, fontSize: 23, height: 1.12, fontWeight: FontWeight.w900)),
                                       const SizedBox(height: 8),
-                                      const Text('Cari, pantau, dan pinjam peralatan\ndalam satu tempat.', style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.4)),
+                                      const Text('Pantau inventaris dan peminjaman\nlebih praktis setiap hari.', style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.4)),
                                     ],
                                   ),
                                 ),
@@ -134,25 +134,28 @@ class _HomePageState extends State<HomePage> {
                           controller: _search,
                           onChanged: (_) => setState(() {}),
                           decoration: InputDecoration(
-                            hintText: 'Cari alat, kode, atau kategori...',
+                            hintText: 'Cari nama alat, kode, kategori...',
                             hintStyle: const TextStyle(fontSize: 12, color: AppColors.muted),
                             prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+                            suffixIcon: _search.text.isEmpty
+                                ? null
+                                : IconButton(icon: const Icon(Icons.close_rounded, size: 18), onPressed: () { _search.clear(); setState(() {}); }),
                             filled: true,
                             fillColor: Colors.white,
                             contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border.withValues(alpha: .7))),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.3)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: BorderSide.none),
+                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: AppColors.border)),
+                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: AppColors.primary, width: 1.4)),
                           ),
                         ),
-                        const SizedBox(height: 17),
+                        const SizedBox(height: 15),
                         Row(
                           children: [
-                            _statCard('Total inventaris', items.length.toString(), Icons.inventory_2_outlined, const Color(0xFF3157D5)),
-                            const SizedBox(width: 10),
-                            _statCard('Tersedia', available.toString(), Icons.check_circle_outline, const Color(0xFF15966B)),
-                            const SizedBox(width: 10),
-                            _statCard('Dipinjam', borrowed.toString(), Icons.assignment_outlined, const Color(0xFFE18A35)),
+                            _statCard('TOTAL ALAT', items.length.toString(), Icons.widgets_rounded, AppColors.navy),
+                            const SizedBox(width: 9),
+                            _statCard('TERSEDIA', available.toString(), Icons.check_circle_rounded, AppColors.available),
+                            const SizedBox(width: 9),
+                            _statCard('DIPINJAM', borrowed.toString(), Icons.schedule_rounded, AppColors.borrowed),
                           ],
                         ),
                       ],
@@ -160,12 +163,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 12),
-                sliver: SliverToBoxAdapter(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 25, 20, 13),
                   child: Row(
                     children: [
-                      const Expanded(child: Text('Jelajahi kategori', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.navy))),
+                      const Expanded(child: Text('Kategori alat', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.navy))),
                       Text('${categoryList.length} kategori', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
                     ],
                   ),
@@ -173,12 +176,12 @@ class _HomePageState extends State<HomePage> {
               ),
               SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 92,
+                  height: 91,
                   child: ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 9),
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
                     itemBuilder: (context, index) {
                       final category = categories[index];
                       final selected = category == _category;
@@ -187,22 +190,21 @@ class _HomePageState extends State<HomePage> {
                         onTap: () => setState(() => _category = category),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          width: 112,
+                          width: 116,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: selected ? AppColors.primary : Colors.white,
-                            borderRadius: BorderRadius.circular(17),
-                            border: Border.all(color: selected ? AppColors.primary : AppColors.border),
-                            boxShadow: selected ? [BoxShadow(color: AppColors.primary.withValues(alpha: .18), blurRadius: 12, offset: const Offset(0, 5))] : null,
+                            color: selected ? AppColors.navy : Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: selected ? AppColors.navy : AppColors.border),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(_categoryIcon(category), color: selected ? Colors.white : AppColors.primary, size: 20),
+                              Icon(_categoryIcon(category), color: selected ? const Color(0xFFE8B18F) : AppColors.primary, size: 20),
                               const SizedBox(height: 6),
-                              Text(category, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: selected ? Colors.white : AppColors.navy)),
-                              Text('$count barang', style: TextStyle(fontSize: 10, color: selected ? Colors.white70 : AppColors.muted)),
+                              Text(category, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: selected ? Colors.white : AppColors.navy)),
+                              Text('$count barang', style: TextStyle(fontSize: 10, color: selected ? Colors.white60 : AppColors.muted)),
                             ],
                           ),
                         ),
@@ -211,12 +213,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                sliver: SliverToBoxAdapter(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 13),
                   child: Row(
                     children: [
-                      Expanded(child: Text(_category == 'Semua' ? 'Inventaris terbaru' : 'Kategori $_category', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.navy))),
+                      Expanded(child: Text(_category == 'Semua' ? 'Semua inventaris' : _category, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.navy))),
                       Text('${visible.length} barang', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
                     ],
                   ),
@@ -225,12 +227,12 @@ class _HomePageState extends State<HomePage> {
               if (snapshot.hasError)
                 const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(25), child: Text('Gagal memuat inventaris. Periksa koneksi dan Firebase.')))
               else if (!snapshot.hasData)
-                const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(35), child: Center(child: CircularProgressIndicator())))
+                const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(35), child: Center(child: CircularProgressIndicator(color: AppColors.primary))))
               else if (visible.isEmpty)
                 const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(30), child: Center(child: Text('Belum ada barang pada kategori ini.', style: TextStyle(color: AppColors.muted)))))
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 3, 20, 30),
+                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 32),
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => ItemCard(item: visible[index]),
@@ -238,7 +240,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                       maxCrossAxisExtent: 230,
-                      mainAxisExtent: 258,
+                      mainAxisExtent: 265,
                       crossAxisSpacing: 13,
                       mainAxisSpacing: 13,
                     ),
@@ -254,15 +256,19 @@ class _HomePageState extends State<HomePage> {
   Widget _statCard(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border.withValues(alpha: .7))),
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: AppColors.border),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color, size: 19),
+            Icon(icon, color: color, size: 18),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.navy)),
-            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: AppColors.muted)),
+            Text(value, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: AppColors.navy)),
+            Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 8, letterSpacing: .6, fontWeight: FontWeight.w800, color: AppColors.muted)),
           ],
         ),
       ),
@@ -271,12 +277,11 @@ class _HomePageState extends State<HomePage> {
 
   IconData _categoryIcon(String category) {
     final value = category.toLowerCase();
-    if (value.contains('elektronik')) return Icons.memory_rounded;
-    if (value.contains('komponen')) return Icons.developer_board_rounded;
+    if (value.contains('elektronik') || value.contains('komponen')) return Icons.memory_rounded;
     if (value.contains('optik')) return Icons.biotech_rounded;
     if (value.contains('ukur')) return Icons.straighten_rounded;
     if (value.contains('jaringan')) return Icons.router_rounded;
-    if (value.contains('audio')) return Icons.videocam_rounded;
+    if (value.contains('audio') || value.contains('kamera')) return Icons.videocam_rounded;
     if (value.contains('perkakas')) return Icons.handyman_rounded;
     return Icons.grid_view_rounded;
   }
