@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
@@ -15,49 +14,35 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = const [
-    HomePage(),
-    InventoryPage(),
-    ProfilePage(),
-  ];
+  final List<Widget> _pages = const [HomePage(), InventoryPage(), ProfilePage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-
+      backgroundColor: AppColors.background,
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: NavigationBar(
+        height: 70,
         selectedIndex: _selectedIndex,
-
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-
+        onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         backgroundColor: Colors.white,
-        indicatorColor: AppColors.primary.withValues(alpha: .13),
-
-        destinations: const [
+        surfaceTintColor: Colors.white,
+        indicatorColor: Colors.transparent,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined, color: _selectedIndex == 0 ? AppColors.primary : AppColors.muted),
+            selectedIcon: const Icon(Icons.home, color: AppColors.primary),
             label: 'Beranda',
           ),
-
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
+            icon: Icon(Icons.inventory_2_outlined, color: _selectedIndex == 1 ? AppColors.primary : AppColors.muted),
+            selectedIcon: const Icon(Icons.inventory_2, color: AppColors.primary),
             label: 'Inventaris',
           ),
-
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline, color: _selectedIndex == 2 ? AppColors.primary : AppColors.muted),
+            selectedIcon: const Icon(Icons.person, color: AppColors.primary),
             label: 'Profil',
           ),
         ],
