@@ -5,7 +5,7 @@ class _HomePageState extends State<HomePage>{
  final _service=FirestoreService();final _search=TextEditingController();String _category='Semua';
  @override void dispose(){_search.dispose();super.dispose();}
  @override Widget build(BuildContext context){return Scaffold(backgroundColor:AppColors.background,body:StreamBuilder<List<ItemModel>>(stream:_service.getItems(),builder:(context,s){
- final items=s.data??[];final categories=['Semua',...items.map((e)=>e.category).toSet().toList()..sort()];
+ final items=s.data??[];final categoryList=items.map((e)=>e.category).toSet().toList()..sort();final categories=['Semua',...categoryList];
  final visible=items.where((i){final q=_search.text.toLowerCase();final match=i.itemName.toLowerCase().contains(q)||i.code.toLowerCase().contains(q)||i.category.toLowerCase().contains(q);return match&&(_category=='Semua'||i.category==_category);}).toList();
  final available=items.where((e)=>e.status=='Available').length;
  return CustomScrollView(slivers:[
