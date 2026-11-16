@@ -7,9 +7,7 @@ import 'utils/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   runApp(const LabTrackApp());
 }
 
@@ -21,26 +19,31 @@ class LabTrackApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LabTrack',
-
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 129, 130, 131)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: Colors.white,
+        ),
         fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.background,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 15,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none,
           ),
         ),
       ),
-
       home: const SplashPage(),
     );
   }
