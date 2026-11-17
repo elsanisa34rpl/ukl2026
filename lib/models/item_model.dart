@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ItemModel {
@@ -11,7 +10,7 @@ class ItemModel {
   final String spesification;
   final Timestamp? createdAt;
 
-  ItemModel({
+  const ItemModel({
     required this.id,
     required this.itemName,
     required this.category,
@@ -23,17 +22,19 @@ class ItemModel {
   });
 
   factory ItemModel.fromDocument(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = doc.data() as Map<String, dynamic>? ?? {};
 
     return ItemModel(
       id: doc.id,
-      itemName: data['item_name'] ?? '',
-      category: data['category'] ?? '',
-      code: data['code'] ?? '',
-      status: data['status'] ?? 'Available',
-      image: data['image'] ?? '',
-      spesification: data['spesification'] ?? '',
-      createdAt: data['created_at'],
+      itemName: (data['item_name'] ?? '').toString(),
+      category: (data['category'] ?? '').toString(),
+      code: (data['code'] ?? '').toString(),
+      status: (data['status'] ?? 'Available').toString(),
+      image: (data['image'] ?? '').toString(),
+      spesification: (data['spesification'] ?? '').toString(),
+      createdAt: data['created_at'] is Timestamp
+          ? data['created_at'] as Timestamp
+          : null,
     );
   }
 
@@ -46,8 +47,7 @@ class ItemModel {
       'status': status,
       'image': image,
       'spesification': spesification,
-      'created_at': createdAt ??
-          FieldValue.serverTimestamp(),
+      'created_at': createdAt ?? FieldValue.serverTimestamp(),
     };
   }
 }

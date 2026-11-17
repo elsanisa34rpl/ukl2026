@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +11,7 @@ import '../widgets/item_image.dart';
 class ItemDetailPage extends StatefulWidget {
   final ItemModel item;
 
-  const ItemDetailPage({
-    super.key,
-    required this.item,
-  });
+  const ItemDetailPage({super.key, required this.item});
 
   @override
   State<ItemDetailPage> createState() => _ItemDetailPageState();
@@ -42,10 +38,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
     setState(() => _loading = true);
 
     try {
-      await _service.borrowItem(
-        uid: user.uid,
-        item: widget.item,
-      );
+      await _service.borrowItem(uid: user.uid, item: widget.item);
 
       if (!mounted) return;
 
@@ -58,9 +51,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
         ),
       );
     } catch (e) {
-      _showMessage(
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      _showMessage(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -69,15 +60,13 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _copyCode() {
-    Clipboard.setData(
-      ClipboardData(text: widget.item.code),
-    );
+    Clipboard.setData(ClipboardData(text: widget.item.code));
     _showMessage('Kode alat berhasil disalin.');
   }
 
@@ -87,9 +76,18 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
     final date = timestamp.toDate();
 
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr',
-      'Mei', 'Jun', 'Jul', 'Agu',
-      'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
 
     return '${date.day} ${months[date.month - 1]} ${date.year}';
@@ -173,28 +171,22 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                   child: Column(
                     children: [
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Status',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                            ),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                           _buildStatusChip(item.status),
                         ],
                       ),
                       const Divider(height: 24),
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
                             'Ditambahkan',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                            ),
+                            style: TextStyle(color: AppColors.muted),
                           ),
                           Text(
                             _formatDate(item.createdAt),
@@ -245,10 +237,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ItemImage(
-            item: item,
-            fit: BoxFit.cover,
-          ),
+          ItemImage(item: item, fit: BoxFit.cover),
 
           Container(
             decoration: BoxDecoration(
@@ -268,14 +257,10 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
             top: 42,
             left: 18,
             child: CircleAvatar(
-              backgroundColor:
-                  AppColors.navy.withValues(alpha: .85),
+              backgroundColor: AppColors.navy.withValues(alpha: .85),
               child: IconButton(
                 onPressed: () => Navigator.pop(context),
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
               ),
             ),
           ),
@@ -284,8 +269,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
             top: 42,
             right: 18,
             child: CircleAvatar(
-              backgroundColor:
-                  AppColors.navy.withValues(alpha: .85),
+              backgroundColor: AppColors.navy.withValues(alpha: .85),
               child: IconButton(
                 onPressed: () {
                   showDialog(
@@ -295,22 +279,15 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                         children: [
                           Center(
                             child: InteractiveViewer(
-                              child: ItemImage(
-                                item: item,
-                                fit: BoxFit.contain,
-                              ),
+                              child: ItemImage(item: item, fit: BoxFit.contain),
                             ),
                           ),
                           Positioned(
                             top: 35,
                             right: 15,
                             child: IconButton(
-                              onPressed: () =>
-                                  Navigator.pop(context),
-                              icon: const Icon(
-                                Icons.close,
-                                size: 30,
-                              ),
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close, size: 30),
                             ),
                           ),
                         ],
@@ -318,10 +295,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                     ),
                   );
                 },
-                icon: const Icon(
-                  Icons.fullscreen,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.fullscreen, color: Colors.white),
               ),
             ),
           ),
@@ -350,22 +324,15 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
   // STATUS BANNER
   Widget _buildStatusBanner(bool available) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 18,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
-        color: available
-            ? AppColors.available
-            : AppColors.borrowed,
+        color: available ? AppColors.available : AppColors.borrowed,
         borderRadius: BorderRadius.circular(17),
       ),
       child: Row(
         children: [
           Icon(
-            available
-                ? Icons.check_circle_outline
-                : Icons.lock_clock_outlined,
+            available ? Icons.check_circle_outline : Icons.lock_clock_outlined,
             color: Colors.white,
             size: 23,
           ),
@@ -410,11 +377,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: AppColors.primaryDark,
-            size: 23,
-          ),
+          Icon(icon, color: AppColors.primaryDark, size: 23),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -423,10 +386,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -473,11 +433,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
         children: [
           Row(
             children: [
-              Icon(
-                icon,
-                color: AppColors.secondary,
-                size: 21,
-              ),
+              Icon(icon, color: AppColors.secondary, size: 21),
               const SizedBox(width: 10),
               Text(
                 title,
@@ -498,15 +454,10 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
 
   Widget _buildStatusChip(String status) {
     final available = status == 'Available';
-    final color = available
-        ? AppColors.available
-        : AppColors.borrowed;
+    final color = available ? AppColors.available : AppColors.borrowed;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(20),
@@ -534,9 +485,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
         if (!snapshot.hasData) {
           return const SizedBox(
             height: 90,
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -563,8 +512,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: similarItems.length,
-            separatorBuilder: (context, index) =>
-                const SizedBox(width: 12),
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final item = similarItems[index];
 
@@ -597,16 +545,12 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                       SizedBox(
                         height: 120,
                         width: double.infinity,
-                        child: ItemImage(
-                          item: item,
-                          fit: BoxFit.cover,
-                        ),
+                        child: ItemImage(item: item, fit: BoxFit.cover),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(11),
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               item.itemName,
@@ -660,16 +604,12 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
         width: double.infinity,
         height: 49,
         child: ElevatedButton(
-          onPressed: available && !_loading
-              ? _borrowItem
-              : null,
+          onPressed: available && !_loading ? _borrowItem : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
-            disabledBackgroundColor:
-                const Color(0xFFE5E5E8),
+            disabledBackgroundColor: const Color(0xFFE5E5E8),
             foregroundColor: Colors.white,
-            disabledForegroundColor:
-                const Color(0xFF9999A2),
+            disabledForegroundColor: const Color(0xFF9999A2),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(17),
@@ -685,9 +625,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                   ),
                 )
               : Text(
-                  available
-                      ? 'Pinjam Alat'
-                      : 'Sedang Dipinjam Pengguna Lain',
+                  available ? 'Pinjam Alat' : 'Sedang Dipinjam Pengguna Lain',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,

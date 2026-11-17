@@ -28,9 +28,7 @@ class _SplashPageState extends State<SplashPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => user != null
-              ? const MainShell()
-              : const LoginPage(),
+          builder: (_) => user != null ? const MainShell() : const LoginPage(),
         ),
       );
     });
@@ -49,10 +47,7 @@ class _SplashPageState extends State<SplashPage> {
         width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppColors.primary,
-              AppColors.secondary,
-            ],
+            colors: [AppColors.primary, AppColors.secondary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

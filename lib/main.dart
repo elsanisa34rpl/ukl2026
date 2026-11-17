@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'pages/splash_page.dart';
@@ -33,7 +34,13 @@ class LabTrackApp extends StatelessWidget {
           secondary: AppColors.secondary,
           surface: Colors.white,
         ),
-        fontFamily: 'Roboto',
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
         appBarTheme: const AppBarTheme(
           backgroundColor: AppColors.navy,
           foregroundColor: Colors.white,

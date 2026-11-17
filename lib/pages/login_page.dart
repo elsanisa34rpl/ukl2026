@@ -42,9 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const MainShell(),
-        ),
+        MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -57,9 +55,9 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _message(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -80,10 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                       height: 90,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            AppColors.primary,
-                            AppColors.secondary,
-                          ],
+                          colors: [AppColors.primary, AppColors.secondary],
                         ),
                         borderRadius: BorderRadius.circular(26),
                       ),
@@ -174,14 +169,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       child: _loading
-                          ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               'Login',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                     ),
                   ),
@@ -196,9 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'Belum punya akun? Daftar sekarang',
-                      ),
+                      child: const Text('Belum punya akun? Daftar sekarang'),
                     ),
                   ),
                 ],

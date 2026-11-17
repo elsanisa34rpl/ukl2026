@@ -51,9 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (_) => const MainShell(),
-        ),
+        MaterialPageRoute(builder: (_) => const MainShell()),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
@@ -66,9 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _message(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(value)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
   @override
@@ -118,9 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'Minimal 6 karakter',
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _hidePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                        _hidePassword ? Icons.visibility_off : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -150,9 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     child: _loading
-                        ? const CircularProgressIndicator(
-                            color: Colors.white,
-                          )
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text('Daftar Sekarang'),
                   ),
                 ),
@@ -175,10 +167,7 @@ class _RegisterPageState extends State<RegisterPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           TextFormField(
             controller: controller,

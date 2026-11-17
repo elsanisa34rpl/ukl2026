@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
 import 'home_page.dart';
 import 'inventory_page.dart';
@@ -14,6 +15,13 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mengisi data dummy ke Firestore hanya jika koleksi items masih kosong.
+    FirestoreService().seedDummyItems().catchError((_) {});
+  }
 
   final List<Widget> _pages = const [
     HomePage(),

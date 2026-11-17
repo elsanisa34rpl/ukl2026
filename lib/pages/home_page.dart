@@ -42,49 +42,161 @@ class _HomePageState extends State<HomePage> {
                 item.category.toLowerCase().contains(query);
 
             final matchCategory =
-                _category == 'Semua' ||
-                item.category == _category;
+                _category == 'Semua' || item.category == _category;
 
             return matchSearch && matchCategory;
           }).toList();
 
-          final categories = [
-            'Semua',
-            ...items.map((e) => e.category).toSet(),
-          ];
+          final categories = ['Semua', ...items.map((e) => e.category).toSet()];
 
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                  clipBehavior: Clip.antiAlias,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.secondary,
-                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primaryDark, AppColors.navy],
                     ),
                   ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: TextField(
-                      controller: _search,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: 'Cari nama, kode, atau kategori...',
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: AppColors.primaryDark,
-                        ),
-                        fillColor: Colors.white,
-                        filled: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(17),
-                          borderSide: BorderSide.none,
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        top: -72,
+                        right: -34,
+                        child: Container(
+                          width: 190,
+                          height: 190,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.06),
+                          ),
                         ),
                       ),
-                    ),
+                      Positioned(
+                        top: 62,
+                        right: 56,
+                        child: Icon(
+                          Icons.science_outlined,
+                          size: 96,
+                          color: Colors.white.withValues(alpha: 0.07),
+                        ),
+                      ),
+                      SafeArea(
+                        bottom: false,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 14, 20, 22),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.16,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.biotech_rounded,
+                                      color: Colors.white,
+                                      size: 23,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 11),
+                                  const Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'LabTrack',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.2,
+                                        ),
+                                      ),
+                                      Text(
+                                        'INVENTARIS LABORATORIUM',
+                                        style: TextStyle(
+                                          color: Color(0xFFD8D5C9),
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 1.1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                              const Text(
+                                'Temukan alat\nyang kamu butuhkan',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 25,
+                                  height: 1.18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 7),
+                              Text(
+                                'Jelajahi koleksi alat laboratorium dengan mudah.',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.78),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              TextField(
+                                controller: _search,
+                                onChanged: (_) => setState(() {}),
+                                decoration: InputDecoration(
+                                  hintText: 'Cari nama, kode, atau kategori...',
+                                  hintStyle: const TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 13,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.search_rounded,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                  fillColor: Colors.white,
+                                  filled: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(17),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(17),
+                                    borderSide: BorderSide(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -95,16 +207,18 @@ class _HomePageState extends State<HomePage> {
                   delegate: SliverChildListDelegate([
                     _banner(),
 
-                    const SizedBox(height: 23),
+                    const SizedBox(height: 16),
 
-                    _title('Semua Data'),
+                    _stats(items),
+
+                    const SizedBox(height: 22),
+
+                    _title('Semua Alat'),
 
                     if (snapshot.hasError)
                       const Text('Gagal memuat data inventaris.')
                     else if (!snapshot.hasData)
-                      const Center(
-                        child: CircularProgressIndicator(),
-                      )
+                      const Center(child: CircularProgressIndicator())
                     else if (filtered.isEmpty)
                       const Text('Belum ada alat yang sesuai.')
                     else
@@ -147,8 +261,8 @@ class _HomePageState extends State<HomePage> {
                           final count = category == 'Semua'
                               ? items.length
                               : items
-                                  .where((e) => e.category == category)
-                                  .length;
+                                    .where((e) => e.category == category)
+                                    .length;
 
                           return _categoryCard(
                             category,
@@ -206,10 +320,7 @@ class _HomePageState extends State<HomePage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withValues(alpha: 0.65),
-            ],
+            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.65)],
           ),
         ),
         child: const Text(
@@ -221,6 +332,67 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _stats(List<ItemModel> items) {
+    final available = items.where((e) => e.status == 'Available').length;
+
+    Widget cell(String value, String label, Color color, IconData icon) {
+      return Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.045),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(height: 5),
+              Text(
+                value,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                label,
+                style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        cell(
+          '${items.length}',
+          'Total Alat',
+          AppColors.navy,
+          Icons.inventory_2,
+        ),
+        const SizedBox(width: 10),
+        cell('$available', 'Tersedia', AppColors.available, Icons.check_circle),
+        const SizedBox(width: 10),
+        cell(
+          '${items.length - available}',
+          'Dipinjam',
+          AppColors.borrowed,
+          Icons.lock_clock,
+        ),
+      ],
     );
   }
 
@@ -238,20 +410,17 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _categoryCard(
-    String category,
-    int count,
-    bool selected,
-  ) {
+  Widget _categoryCard(String category, int count, bool selected) {
     final icons = {
-      'Arduino': Icons.memory,
-      'Laptop': Icons.laptop,
-      'Mikroskop': Icons.biotech,
-      'Multimeter': Icons.electrical_services,
-      'Oscilloscope': Icons.settings_input_component,
+      'Semua': Icons.grid_view_rounded,
+      'Komputer': Icons.laptop_mac,
+      'Elektronik': Icons.memory,
+      'Pengukuran': Icons.electrical_services,
+      'Optik': Icons.biotech,
+      'Jaringan': Icons.router,
       'Perkakas': Icons.handyman,
-      'Router': Icons.router,
-      'Semua': Icons.grid_view,
+      'Komponen': Icons.developer_board,
+      'Kimia': Icons.science,
     };
 
     return GestureDetector(
@@ -285,17 +454,11 @@ class _HomePageState extends State<HomePage> {
               category,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             Text(
               '$count alat',
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.muted,
-              ),
+              style: const TextStyle(fontSize: 10, color: AppColors.muted),
             ),
           ],
         ),
@@ -316,9 +479,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Icon(icon, color: color),
             const SizedBox(width: 9),
-            Expanded(
-              child: _title(title),
-            ),
+            Expanded(child: _title(title)),
             Text(
               '${items.length} alat',
               style: TextStyle(

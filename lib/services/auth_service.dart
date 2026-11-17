@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,6 +6,12 @@ class AuthService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;
+
+  static String avatarUrl(String name) {
+    final encoded = Uri.encodeComponent(name.trim().isEmpty ? 'LT' : name.trim());
+    return 'https://ui-avatars.com/api/?name=$encoded'
+        '&size=256&background=DC3545&color=ffffff&bold=true';
+  }
 
   Stream<User?> get authChanges =>
       _auth.authStateChanges();
@@ -30,7 +35,8 @@ class AuthService {
       'email': email.trim(),
       'kelas': kelas.trim(),
       'created_at': FieldValue.serverTimestamp(),
-      'foto': '',
+      // Foto dummy berupa URL avatar yang dibuat dari nama siswa.
+      'foto': avatarUrl(name),
     });
   }
 

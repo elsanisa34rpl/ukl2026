@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/item_model.dart';
 import '../utils/app_colors.dart';
 
+/// Menampilkan gambar alat dari URL. Jika URL kosong atau gagal dimuat,
+/// dicoba gambar cadangan sesuai kategori, lalu ikon sebagai terakhir.
 class ItemImage extends StatelessWidget {
   final ItemModel item;
   final double? width;
@@ -17,62 +19,73 @@ class ItemImage extends StatelessWidget {
     this.fit = BoxFit.cover,
   });
 
-  static const _fallbackImages = {
-    'laptop':
-        'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800',
+  static const _base = 'https://images.unsplash.com/';
+
+  static const _fallbackByCategory = {
+    'komputer': '${_base}photo-1496181133206-80ce9b88a853?w=800',
+    'elektronik': '${_base}photo-1553406830-ef2513450d76?w=800',
+    'pengukuran': '${_base}photo-1581092160562-40aa08e78837?w=800',
     'mikroskop':
-        'https://images.unsplash.com/photo-1581093458791-9d42e3c5e3b4?w=800',
-    'elektronik':
-        'https://images.unsplash.com/photo-1553406830-ef2513450d76?w=800',
-    'pengukuran':
-        'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800',
-    'projector':
-        'https://images.unsplash.com/photo-1528395874238-34d7b4f8c5?w=800',
+        'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Microscope_MET_DP108688.jpg/960px-Microscope_MET_DP108688.jpg',
+    'microscope':
+        'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Microscope_MET_DP108688.jpg/960px-Microscope_MET_DP108688.jpg',
+    'optik':
+        'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Microscope_MET_DP108688.jpg/960px-Microscope_MET_DP108688.jpg',
+    'jaringan': '${_base}photo-1558494949-ef010cbdcc31?w=800',
+    'komponen': '${_base}photo-1518770660439-4636190af475?w=800',
+    'perkakas': '${_base}photo-1504148455328-c376907d081c?w=800',
+    'kimia': '${_base}photo-1532094349884-543bc11b234d?w=800',
+    'audio visual': '${_base}photo-1478720568477-152d9b164e26?w=800',
+    'proyektor': '${_base}photo-1478720568477-152d9b164e26?w=800',
+    'projector': '${_base}photo-1478720568477-152d9b164e26?w=800',
   };
 
+  static const _defaultFallback =
+      '${_base}photo-1532094349884-543bc11b234d?w=800';
+
   String get _fallbackImage {
-    final details = '${item.itemName} ${item.category}'.toLowerCase();
+    final details = '${item.category} ${item.itemName}'.toLowerCase();
 
-    if (details.contains('laptop')) return _fallbackImages['laptop']!;
-    if (details.contains('mikroskop') || details.contains('optik')) {
-      return _fallbackImages['mikroskop']!;
-    }
-    if (details.contains('projector') || details.contains('proyektor')) {
-      return _fallbackImages['projector']!;
-    }
-    if (details.contains('multimeter') || details.contains('pengukuran')) {
-      return _fallbackImages['pengukuran']!;
-    }
-    if (details.contains('elektronik') ||
-        details.contains('arduino') ||
-        details.contains('breadboard')) {
-      return _fallbackImages['elektronik']!;
+    for (final entry in _fallbackByCategory.entries) {
+      if (details.contains(entry.key)) return entry.value;
     }
 
-    return _fallbackImages['pengukuran']!;
+    return _defaultFallback;
   }
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = item.image.trim();
-    final fallbackImage = _fallbackImage;
+    final url = item.image.trim();
+    final fallback = _fallbackImage;
+
+    final first = url.isNotEmpty ? url : fallback;
 
     return SizedBox(
       width: width,
       height: height,
-      child: imageUrl.isEmpty
-          ? _networkImage(fallbackImage, fallbackImage)
-          : _networkImage(imageUrl, fallbackImage),
+      child: _network(first, fallback),
     );
   }
 
-  Widget _networkImage(String imageUrl, String fallbackImage) {
+  Widget _network(String url, String fallback) {
     return Image.network(
-      imageUrl,
+      url,
       fit: fit,
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: const Color(0xFFFDECEF),
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        );
+      },
       errorBuilder: (context, error, stackTrace) {
-        if (imageUrl != fallbackImage) {
-          return _networkImage(fallbackImage, fallbackImage);
+        if (url != fallback) {
+          return _network(fallback, fallback);
         }
         return _placeholder();
       },
@@ -81,17 +94,21 @@ class ItemImage extends StatelessWidget {
 
   Widget _placeholder() {
     final details = '${item.itemName} ${item.category}'.toLowerCase();
-    final icon = details.contains('laptop')
+    final icon = details.contains('laptop') || details.contains('komputer')
         ? Icons.laptop_mac
         : details.contains('mikroskop') || details.contains('optik')
         ? Icons.biotech
-        : details.contains('projector') || details.contains('proyektor')
+        : details.contains('proyektor') || details.contains('projector')
         ? Icons.videocam
-        : details.contains('multimeter') || details.contains('pengukuran')
+        : details.contains('ukur') || details.contains('meter')
         ? Icons.electrical_services
-        : details.contains('arduino') || details.contains('elektronik')
-        ? Icons.memory
-        : Icons.devices_other;
+        : details.contains('jaringan') || details.contains('router')
+        ? Icons.router
+        : details.contains('kimia')
+        ? Icons.science
+        : details.contains('perkakas') || details.contains('solder')
+        ? Icons.handyman
+        : Icons.memory;
 
     return Container(
       width: width,
