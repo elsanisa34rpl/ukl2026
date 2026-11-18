@@ -300,6 +300,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget _banner() {
     return Container(
       height: 165,

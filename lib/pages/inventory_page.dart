@@ -9,7 +9,9 @@ import 'item_detail_page.dart';
 import 'item_form_page.dart';
 
 class InventoryPage extends StatefulWidget {
-  const InventoryPage({super.key});
+  final bool embedded;
+
+  const InventoryPage({super.key, this.embedded = false});
 
   @override
   State<InventoryPage> createState() => _InventoryPageState();
@@ -34,9 +36,7 @@ class _InventoryPageState extends State<InventoryPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Hapus Alat'),
         content: Text('Yakin ingin menghapus ${item.itemName}?'),
         actions: [
@@ -45,9 +45,7 @@ class _InventoryPageState extends State<InventoryPage> {
             child: const Text('Batal'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Hapus'),
           ),
@@ -68,25 +66,27 @@ class _InventoryPageState extends State<InventoryPage> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Inventaris'),
-      ),
+      appBar: widget.embedded
+          ? null
+          : AppBar(
+              automaticallyImplyLeading: false,
+              title: const Text('Inventaris'),
+            ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ItemFormPage()),
+            MaterialPageRoute(builder: (_) => const ItemFormPage(legacy: true)),
           );
         },
         icon: const Icon(Icons.add),
@@ -112,7 +112,8 @@ class _InventoryPageState extends State<InventoryPage> {
 
           final items = all.where((item) {
             final matchStatus = _status == 'Semua' || item.status == _status;
-            final matchQuery = query.isEmpty ||
+            final matchQuery =
+                query.isEmpty ||
                 item.itemName.toLowerCase().contains(query) ||
                 item.code.toLowerCase().contains(query) ||
                 item.category.toLowerCase().contains(query);
@@ -155,10 +156,7 @@ class _InventoryPageState extends State<InventoryPage> {
                   children: [
                     _chip('Semua', 'Semua (${all.length})'),
                     _chip('Available', 'Tersedia ($available)'),
-                    _chip(
-                      'Borrowed',
-                      'Dipinjam (${all.length - available})',
-                    ),
+                    _chip('Borrowed', 'Dipinjam (${all.length - available})'),
                   ],
                 ),
               ),
@@ -232,9 +230,7 @@ class _InventoryPageState extends State<InventoryPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => ItemDetailPage(item: item),
-              ),
+              MaterialPageRoute(builder: (_) => ItemDetailPage(item: item)),
             );
           },
           child: Padding(
@@ -285,7 +281,8 @@ class _InventoryPageState extends State<InventoryPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ItemFormPage(item: item),
+                          builder: (_) =>
+                              ItemFormPage(legacy: true, legacyItem: item),
                         ),
                       );
                     } else {

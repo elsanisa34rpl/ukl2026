@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(userId) {
+      return /databases/$(database)/documents/users/$(userId);
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(userPath(request.auth.uid))
+        && lower(get(userPath(request.auth.uid)).data.role).matches('admin\\s*');
+    }
+
+    function isUser(userId) {
+      return signedIn()
+        && request.auth.uid == userId
+        && exists(userPath(userId))
+        && (
+          lower(get(userPath(userId)).data.role).matches('user\\s*')
+          || !get(userPath(userId)).data.keys().hasAny(['role'])
+        );
+    }
+
+    match /users/{userId} {
+      allow read: if isUser(userId) || isAdmin();
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && lower(request.resource.data.role).matches('user\\s*')
+        && request.resource.data.email is string
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'kelas',
+          'email',
+          'role',
+          'createdAt'
+        ]);
+      allow update: if isAdmin()
+        || (isUser(userId)
+          && request.resource.data.role == resource.data.role);
+      allow delete: if isAdmin();
+
+      match /borrowings/{borrowingId} {
+        function itemPath() {
+          return /databases/$(database)/documents/items/$(request.resource.data.item_id);
+        }
+
+        allow read: if isUser(userId) || isAdmin();
+        allow create: if isUser(userId)
+          && request.resource.data.borrow_id == borrowingId
+          && request.resource.data.user_id == userId
+          && request.resource.data.item_id is string
+          && request.resource.data.item_name is string
+          && request.resource.data.keys().hasOnly([
+            'borrow_id',
+            'item_id',
+            'user_id',
+            'item_name',
+            'user_name',
+            'borrow_date',
+            'return_date'
+          ])
+          && request.resource.data.borrow_date == request.time
+          && request.resource.data.return_date == null
+          && getAfter(itemPath()).data.status == 'Borrowed'
+          && getAfter(itemPath()).data.active_borrowing_id == borrowingId
+          && getAfter(itemPath()).data.borrowed_by == userId;
+        allow update: if isUser(userId)
+          && resource.data.return_date == null
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['return_date'])
+          && request.resource.data.return_date == request.time
+          && (
+            resource.data.item_id == ''
+            || !exists(/databases/$(database)/documents/items/$(resource.data.item_id))
+            || (
+              getAfter(/databases/$(database)/documents/items/$(resource.data.item_id)).data.status == 'Available'
+              && getAfter(/databases/$(database)/documents/items/$(resource.data.item_id)).data.last_returned_borrowing_id == borrowingId
+            )
+          );
+        allow delete: if false;
+      }
+    }
+
+    match /items/{itemId} {
+      function isValidBorrow() {
+        let borrowingId = request.resource.data.active_borrowing_id;
+        let borrowingPath = /databases/$(database)/documents/users/$(request.auth.uid)/borrowings/$(borrowingId);
+        return isUser(request.auth.uid)
+          && resource.data.status == 'Available'
+          && request.resource.data.status == 'Borrowed'
+          && request.resource.data.active_borrowing_id is string
+          && request.resource.data.borrowed_by == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'active_borrowing_id', 'borrowed_by'])
+          && existsAfter(borrowingPath)
+          && getAfter(borrowingPath).data.item_id == itemId
+          && getAfter(borrowingPath).data.user_id == request.auth.uid
+          && getAfter(borrowingPath).data.return_date == null;
+      }
+
+      function isValidReturn() {
+        let borrowingId = request.resource.data.last_returned_borrowing_id;
+        let borrowingPath = /databases/$(database)/documents/users/$(request.auth.uid)/borrowings/$(borrowingId);
+        return isUser(request.auth.uid)
+          && resource.data.status == 'Borrowed'
+          && request.resource.data.status == 'Available'
+          && request.resource.data.active_borrowing_id == null
+          && request.resource.data.borrowed_by == null
+          && request.resource.data.last_returned_borrowing_id is string
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly([
+              'status',
+              'active_borrowing_id',
+              'borrowed_by',
+              'last_returned_borrowing_id'
+            ])
+          && existsAfter(borrowingPath)
+          && getAfter(borrowingPath).data.item_id == itemId
+          && (
+            !getAfter(borrowingPath).data.keys().hasAny(['user_id'])
+            || getAfter(borrowingPath).data.user_id == request.auth.uid
+          )
+          && getAfter(borrowingPath).data.return_date == request.time
+          && (
+            !resource.data.keys().hasAny(['active_borrowing_id'])
+            || resource.data.active_borrowing_id == borrowingId
+          )
+          && (
+            !resource.data.keys().hasAny(['borrowed_by'])
+            || resource.data.borrowed_by == request.auth.uid
+          );
+      }
+
+      allow read: if signedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (request.resource.data.active_borrowing_id is string && isValidBorrow())
+        || (request.resource.data.last_returned_borrowing_id is string && isValidReturn());
+    }
+
+    match /meta/{metaId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

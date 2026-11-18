@@ -4,6 +4,8 @@ class BorrowingModel {
   final String id;
   final String itemId;
   final String itemName;
+  final String userId;
+  final String userName;
   final Timestamp? borrowDate;
   final Timestamp? returnDate;
 
@@ -11,6 +13,8 @@ class BorrowingModel {
     required this.id,
     required this.itemId,
     required this.itemName,
+    required this.userId,
+    required this.userName,
     this.borrowDate,
     this.returnDate,
   });
@@ -21,11 +25,15 @@ class BorrowingModel {
     DocumentSnapshot<Map<String, dynamic>> doc,
   ) {
     final data = doc.data() ?? {};
+    final userId =
+        doc.reference.parent.parent?.id ?? (data['user_id'] ?? '').toString();
 
     return BorrowingModel(
       id: doc.id,
       itemId: (data['item_id'] ?? '').toString(),
       itemName: (data['item_name'] ?? 'Alat').toString(),
+      userId: userId,
+      userName: (data['user_name'] ?? userId).toString(),
       borrowDate: data['borrow_date'] is Timestamp
           ? data['borrow_date'] as Timestamp
           : null,

@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/auth_service.dart';
+import '../providers/auth_provider.dart' as app_auth;
 import '../utils/app_colors.dart';
-import 'main_shell.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -14,16 +14,11 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _name = TextEditingController();
   final _kelas = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-
-  final _auth = AuthService();
-
-  bool _loading = false;
-  bool _hidePassword = true;
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -34,121 +29,121 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> _register() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _loading = true);
-
+    setState(() => _busy = true);
     try {
-      await _auth.register(
-        name: _name.text,
-        kelas: _kelas.text,
-        email: _email.text,
-        password: _password.text,
+      await context.read<app_auth.AuthProvider>().register(
+        _name.text,
+        _kelas.text,
+        _email.text,
+        _password.text,
       );
-
-      if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (route) => false,
-      );
+      if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
     } on FirebaseAuthException catch (e) {
-      _message(e.message ?? 'Pendaftaran gagal.');
-    } catch (e) {
-      _message('Terjadi kesalahan: $e');
+      if (!mounted) return;
+      final msg = e.code == 'email-already-in-use'
+          ? 'Email sudah terdaftar.'
+          : 'Pendaftaran gagal (${e.code}).';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _busy = false);
     }
-  }
-
-  void _message(String value) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(value)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Akun')),
+      appBar: AppBar(title: const Text('Daftar')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Gabung dengan LabTrack',
-                  style: TextStyle(
-                    color: AppColors.navy,
-                    fontSize: 27,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Lengkapi data diri untuk membuat akun.',
-                  style: TextStyle(color: AppColors.muted),
-                ),
-                const SizedBox(height: 25),
-                _field('Nama lengkap', _name, Icons.person_outline),
-                _field('Kelas', _kelas, Icons.school_outlined),
-                _field(
-                  'Email',
-                  _email,
-                  Icons.email_outlined,
-                  type: TextInputType.emailAddress,
-                ),
-                const Text(
-                  'Password',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _password,
-                  obscureText: _hidePassword,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    hintText: 'Minimal 6 karakter',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _hidePassword ? Icons.visibility_off : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _hidePassword = !_hidePassword;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return 'Password minimal 6 karakter.';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 25),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _register,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Gabung dengan LabTrack',
+                      style: TextStyle(
+                        color: AppColors.navy,
+                        fontSize: 27,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: _loading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Daftar Sekarang'),
-                  ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Buat akun pengguna untuk meminjam alat laboratorium.',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 25),
+                    _field(
+                      'Nama lengkap',
+                      _name,
+                      Icons.person_outline,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Nama wajib diisi.'
+                          : null,
+                    ),
+                    _field(
+                      'Kelas',
+                      _kelas,
+                      Icons.school_outlined,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Kelas wajib diisi.'
+                          : null,
+                    ),
+                    _field(
+                      'Email',
+                      _email,
+                      Icons.email_outlined,
+                      type: TextInputType.emailAddress,
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Masukkan email yang valid.'
+                          : null,
+                    ),
+                    const Text(
+                      'Password',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _password,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.lock_outline),
+                        hintText: 'Minimal 6 karakter',
+                      ),
+                      validator: (v) => (v == null || v.length < 6)
+                          ? 'Password minimal 6 karakter.'
+                          : null,
+                    ),
+                    const SizedBox(height: 25),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _busy ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                        child: _busy
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text('Daftar Sekarang'),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -161,6 +156,7 @@ class _RegisterPageState extends State<RegisterPage> {
     TextEditingController controller,
     IconData icon, {
     TextInputType type = TextInputType.text,
+    required String? Function(String?) validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 17),
@@ -176,12 +172,7 @@ class _RegisterPageState extends State<RegisterPage> {
               prefixIcon: Icon(icon),
               hintText: 'Masukkan $label',
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '$label wajib diisi.';
-              }
-              return null;
-            },
+            validator: validator,
           ),
         ],
       ),

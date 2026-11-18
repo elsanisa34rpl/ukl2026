@@ -23,7 +23,6 @@ class ItemModel {
 
   factory ItemModel.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-
     return ItemModel(
       id: doc.id,
       itemName: (data['item_name'] ?? '').toString(),
@@ -38,16 +37,14 @@ class ItemModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'item_id': id,
-      'item_name': itemName,
-      'category': category,
-      'code': code,
-      'status': status,
-      'image': image,
-      'spesification': spesification,
-      'created_at': createdAt ?? FieldValue.serverTimestamp(),
-    };
-  }
+  Map<String, dynamic> toMap() => {
+        'item_id': id,
+        'item_name': itemName,
+        'category': category,
+        'code': code,
+        'status': status,
+        'image': image,
+        'spesification': spesification,
+        'created_at': createdAt ?? FieldValue.serverTimestamp(),
+      };
 }

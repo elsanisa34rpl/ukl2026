@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../core/app_exception.dart';
+import '../models/item.dart';
 import '../models/item_model.dart';
+import '../repositoris/item_repository.dart';
 import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
 
 class ItemFormPage extends StatefulWidget {
-  final ItemModel? item;
-  const ItemFormPage({super.key, this.item});
+  final Item? item; // null = tambah baru
+  final ItemModel? legacyItem;
+  final bool legacy;
+
+  const ItemFormPage({
+    super.key,
+    this.item,
+    this.legacyItem,
+    this.legacy = false,
+  });
+
   @override
   State<ItemFormPage> createState() => _ItemFormPageState();
 }
 
 class _ItemFormPageState extends State<ItemFormPage> {
-  final _key = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  final _code = TextEditingController();
-  final _image = TextEditingController();
-  final _spec = TextEditingController();
-  final _service = FirestoreService();
   static const _categories = [
     'Elektronik',
     'Komponen',
@@ -27,80 +35,141 @@ class _ItemFormPageState extends State<ItemFormPage> {
     'Perkakas',
     'Lainnya',
   ];
-  String? _category;
-  bool _loading = false;
+
+  final _formKey = GlobalKey<FormState>();
+  late final _title = TextEditingController(
+    text: widget.item?.title ?? widget.legacyItem?.itemName,
+  );
+  late final _desc = TextEditingController(
+    text: widget.item?.description ?? widget.legacyItem?.spesification,
+  );
+  late final _category = TextEditingController(
+    text: widget.item?.category ?? widget.legacyItem?.category,
+  );
+  late final _image = TextEditingController(
+    text: widget.item?.imageUrl ?? widget.legacyItem?.image,
+  );
+  late final _code = TextEditingController(text: widget.legacyItem?.code ?? '');
+  late final _total = TextEditingController(
+    text: (widget.item?.total ?? 1).toString(),
+  );
+  String? _selectedCategory;
+  bool _busy = false;
+
   @override
   void initState() {
     super.initState();
-    final i = widget.item;
-    if (i != null) {
-      _name.text = i.itemName;
-      _code.text = i.code;
-      _image.text = i.image;
-      _spec.text = i.spesification;
-      _category = i.category;
-    } else {
-      _category = _categories.first;
-    }
+    _selectedCategory =
+        widget.legacyItem?.category ??
+        widget.item?.category ??
+        _categories.first;
   }
 
   @override
   void dispose() {
-    _name.dispose();
-    _code.dispose();
+    _title.dispose();
+    _desc.dispose();
+    _category.dispose();
     _image.dispose();
-    _spec.dispose();
+    _code.dispose();
+    _total.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    if (!_key.currentState!.validate()) return;
-    setState(() => _loading = true);
+    if (!_formKey.currentState!.validate()) return;
+    final editing = widget.item != null || widget.legacyItem != null;
+    setState(() => _busy = true);
     try {
-      final item = ItemModel(
-        id: widget.item?.id ?? '',
-        itemName: _name.text.trim(),
-        category: _category!,
-        code: _code.text.trim(),
-        status: 'Available',
-        image: _image.text.trim(),
-        spesification: _spec.text.trim(),
-      );
-      if (widget.item == null) {
-        await _service.addItem(item);
+      if (widget.legacy) {
+        final item = ItemModel(
+          id: widget.legacyItem?.id ?? '',
+          itemName: _title.text.trim(),
+          category: _selectedCategory!,
+          code: _code.text.trim(),
+          status: widget.legacyItem?.status ?? 'Available',
+          image: _image.text.trim(),
+          spesification: _desc.text.trim(),
+        );
+        final service = FirestoreService();
+        if (widget.legacyItem == null) {
+          await service.addItem(item);
+        } else {
+          await service.updateItem(item);
+        }
       } else {
-        await _service.updateItem(item);
+        final repo = context.read<ItemRepository>();
+        final total = int.parse(_total.text.trim());
+        final item = Item(
+          id: widget.item?.id ?? '',
+          title: _title.text.trim(),
+          description: _desc.text.trim(),
+          category: _category.text.trim(),
+          imageUrl: _image.text.trim(),
+          total: total,
+          available: widget.item?.available ?? total,
+        );
+        if (widget.item == null) {
+          await repo.add(item);
+        } else {
+          await repo.update(item);
+        }
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.item == null
-                ? 'Barang berhasil ditambahkan.'
-                : 'Perubahan berhasil disimpan.',
+            editing
+                ? 'Perubahan berhasil disimpan.'
+                : 'Barang berhasil ditambahkan.',
           ),
         ),
       );
       Navigator.pop(context);
+    } on AppException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _busy = false);
     }
+  }
+
+  String? _required(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null;
+
+  String? _stock(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    if (n == null || n < 1) return 'Isi angka minimal 1';
+    return null;
+  }
+
+  String? _imageUrl(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return null;
+    final uri = Uri.tryParse(text);
+    if (uri == null ||
+        !const ['http', 'https'].contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      return 'URL gambar tidak valid.';
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final edit = widget.item != null;
-    final borrowed = widget.item?.status == 'Borrowed';
-    final cats = {..._categories, ?_category}.toList();
+    final editing = widget.item != null || widget.legacyItem != null;
+    final borrowed = widget.legacyItem?.status == 'Borrowed';
+    final categories = {..._categories, ?_selectedCategory}.toList();
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(edit ? 'Edit Barang' : 'Tambah Barang')),
+      appBar: AppBar(title: Text(editing ? 'Edit Barang' : 'Tambah Barang')),
       body: borrowed
           ? const Center(
               child: Padding(
@@ -112,7 +181,7 @@ class _ItemFormPageState extends State<ItemFormPage> {
               ),
             )
           : Form(
-              key: _key,
+              key: _formKey,
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
@@ -139,39 +208,94 @@ class _ItemFormPageState extends State<ItemFormPage> {
                           style: TextStyle(color: AppColors.muted),
                         ),
                         const SizedBox(height: 22),
-                        _field('Nama barang', _name, 'Contoh: Laptop ASUS'),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          initialValue: _category,
+                        TextFormField(
+                          controller: _title,
                           decoration: const InputDecoration(
-                            labelText: 'Kategori',
-                            prefixIcon: Icon(Icons.category_outlined),
+                            labelText: 'Nama barang',
+                            hintText: 'Contoh: Laptop ASUS',
+                            prefixIcon: Icon(Icons.inventory_2_outlined),
                           ),
-                          items: cats
-                              .map(
-                                (v) =>
-                                    DropdownMenuItem(value: v, child: Text(v)),
-                              )
-                              .toList(),
-                          onChanged: (v) => setState(() => _category = v),
-                          validator: (v) =>
-                              v == null ? 'Pilih kategori barang.' : null,
+                          validator: _required,
                         ),
                         const SizedBox(height: 16),
-                        _field('Kode barang', _code, 'Contoh: LAB007'),
+                        if (widget.legacy)
+                          DropdownButtonFormField<String>(
+                            initialValue: _selectedCategory,
+                            decoration: const InputDecoration(
+                              labelText: 'Kategori',
+                              prefixIcon: Icon(Icons.category_outlined),
+                            ),
+                            items: categories
+                                .map(
+                                  (category) => DropdownMenuItem(
+                                    value: category,
+                                    child: Text(category),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCategory = value;
+                                _category.text = value ?? '';
+                              });
+                            },
+                            validator: (value) =>
+                                value == null ? 'Pilih kategori barang.' : null,
+                          )
+                        else
+                          TextFormField(
+                            controller: _category,
+                            decoration: const InputDecoration(
+                              labelText: 'Kategori',
+                              prefixIcon: Icon(Icons.category_outlined),
+                            ),
+                            validator: _required,
+                          ),
+                        if (widget.legacy) ...[
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _code,
+                            decoration: const InputDecoration(
+                              labelText: 'Kode barang',
+                              hintText: 'Contoh: LAB007',
+                              prefixIcon: Icon(Icons.qr_code_2_outlined),
+                            ),
+                            validator: _required,
+                          ),
+                        ] else ...[
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _total,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'Jumlah stok',
+                              prefixIcon: Icon(Icons.numbers_outlined),
+                            ),
+                            validator: _stock,
+                          ),
+                        ],
                         const SizedBox(height: 16),
-                        _field(
-                          'URL gambar (opsional)',
-                          _image,
-                          'https://...',
-                          required: false,
+                        TextFormField(
+                          controller: _image,
+                          keyboardType: TextInputType.url,
+                          decoration: const InputDecoration(
+                            labelText: 'URL Gambar (opsional)',
+                            hintText: 'https://...',
+                            prefixIcon: Icon(Icons.image_outlined),
+                          ),
+                          validator: _imageUrl,
                         ),
                         const SizedBox(height: 16),
-                        _field(
-                          'Spesifikasi',
-                          _spec,
-                          'Deskripsikan barang',
-                          maxLines: 3,
+                        TextFormField(
+                          controller: _desc,
+                          maxLines: 4,
+                          decoration: const InputDecoration(
+                            labelText: 'Deskripsi',
+                            hintText: 'Deskripsikan barang',
+                            alignLabelWithHint: true,
+                            prefixIcon: Icon(Icons.description_outlined),
+                          ),
+                          validator: _required,
                         ),
                       ],
                     ),
@@ -179,9 +303,9 @@ class _ItemFormPageState extends State<ItemFormPage> {
                   const SizedBox(height: 22),
                   SizedBox(
                     height: 54,
-                    child: ElevatedButton.icon(
-                      onPressed: _loading ? null : _save,
-                      icon: _loading
+                    child: FilledButton.icon(
+                      onPressed: _busy ? null : _save,
+                      icon: _busy
                           ? const SizedBox(
                               width: 18,
                               height: 18,
@@ -192,7 +316,14 @@ class _ItemFormPageState extends State<ItemFormPage> {
                             )
                           : const Icon(Icons.save_outlined),
                       label: Text(
-                        edit ? 'Simpan Perubahan' : 'Tambahkan Barang',
+                        editing ? 'Simpan Perubahan' : 'Tambahkan Barang',
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
                       ),
                     ),
                   ),
@@ -201,30 +332,4 @@ class _ItemFormPageState extends State<ItemFormPage> {
             ),
     );
   }
-
-  Widget _field(
-    String label,
-    TextEditingController c,
-    String hint, {
-    int maxLines = 1,
-    bool required = true,
-  }) => TextFormField(
-    controller: c,
-    maxLines: maxLines,
-    decoration: InputDecoration(labelText: label, hintText: hint),
-    validator: (v) {
-      if (required && (v == null || v.trim().isEmpty)) {
-        return '$label wajib diisi.';
-      }
-      if (label.startsWith('URL') &&
-          v != null &&
-          v.trim().isNotEmpty &&
-          (Uri.tryParse(v.trim()) == null ||
-              !['http', 'https'].contains(Uri.tryParse(v.trim())!.scheme) ||
-              Uri.tryParse(v.trim())!.host.isEmpty)) {
-        return 'URL gambar tidak valid.';
-      }
-      return null;
-    },
-  );
 }

@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../models/app_user.dart';
 import '../models/item_model.dart';
+import '../providers/auth_provider.dart';
 import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
 import '../widgets/item_image.dart';
@@ -23,10 +26,16 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
   bool _loading = false;
 
   Future<void> _borrowItem() async {
+    final appUser = context.read<AuthProvider>().user;
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
+    if (user == null || appUser == null) {
       _showMessage('Silakan login terlebih dahulu.');
+      return;
+    }
+
+    if (appUser.role != UserRole.user) {
+      _showMessage('Peminjaman hanya tersedia untuk akun pengguna.');
       return;
     }
 
@@ -97,6 +106,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
   Widget build(BuildContext context) {
     final item = widget.item;
     final available = item.status == 'Available';
+    final canBorrow = context.watch<AuthProvider>().user?.role == UserRole.user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -221,7 +231,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
           ),
 
           // TOMBOL PEMINJAMAN DI BAGIAN BAWAH
-          _buildBottomButton(available),
+          if (canBorrow) _buildBottomButton(available),
         ],
       ),
     );

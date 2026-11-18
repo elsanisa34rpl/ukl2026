@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../models/borrowing_model.dart';
-import '../services/auth_service.dart';
+import '../providers/auth_provider.dart';
 import '../services/firestore_service.dart';
 import '../utils/app_colors.dart';
-import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,9 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Kembalikan Alat'),
         content: Text('Kembalikan ${borrowing.itemName} sekarang?'),
         actions: [
@@ -60,9 +58,7 @@ class _ProfilePageState extends State<ProfilePage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString().replaceFirst('Exception: ', '')),
-        ),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
       if (mounted) setState(() => _returningId = null);
@@ -108,8 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
           final kelas = (data['kelas'] ?? '-').toString();
           final email = (data['email'] ?? user.email ?? '-').toString();
           final fotoData = (data['foto'] ?? '').toString().trim();
-          final foto =
-              fotoData.isNotEmpty ? fotoData : AuthService.avatarUrl(name);
+          final foto = fotoData;
 
           return StreamBuilder<List<BorrowingModel>>(
             stream: _service.watchBorrowings(user.uid),
@@ -163,31 +158,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           )
                         else
                           ...history.map(_historyTile),
-                        const SizedBox(height: 18),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: () => _logout(context),
-                            icon: const Icon(
-                              Icons.logout,
-                              color: AppColors.primary,
-                            ),
-                            label: const Text(
-                              'Keluar',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.all(15),
-                              side: const BorderSide(color: AppColors.primary),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -217,22 +187,16 @@ class _ProfilePageState extends State<ProfilePage> {
             radius: 52,
             backgroundColor: Colors.white,
             child: ClipOval(
-              child: Image.network(
-                foto,
-                width: 96,
-                height: 96,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Text(
-                    name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
+              child: foto.isEmpty
+                  ? _avatarInitial(name)
+                  : Image.network(
+                      foto,
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _avatarInitial(name),
                     ),
-                  ),
-                ),
-              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -265,6 +229,17 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  Widget _avatarInitial(String name) => Center(
+    child: Text(
+      name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
+      style: const TextStyle(
+        color: AppColors.primary,
+        fontSize: 34,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 
   Widget _stats(int active, int returned) {
     Widget cell(String value, String label, Color color) {
@@ -487,8 +462,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final d = value.toDate();
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     final hh = d.hour.toString().padLeft(2, '0');
     final mm = d.minute.toString().padLeft(2, '0');
@@ -536,9 +521,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Konfirmasi Keluar'),
         content: const Text('Apakah kamu yakin ingin keluar?'),
         actions: [
@@ -554,16 +537,14 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
 
-    if (confirm == true) {
-      await AuthService().logout();
-
+    if (confirm != true || !context.mounted) return;
+    try {
+      await context.read<AuthProvider>().logout();
+    } catch (e) {
       if (!context.mounted) return;
-
-      Navigator.pushAndRemoveUntil(
+      ScaffoldMessenger.of(
         context,
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
-      );
+      ).showSnackBar(SnackBar(content: Text('Gagal keluar: $e')));
     }
   }
 }

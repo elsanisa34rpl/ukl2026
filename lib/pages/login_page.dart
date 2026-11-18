@@ -1,9 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/auth_service.dart';
+import '../models/app_user.dart';
+import '../providers/auth_provider.dart' as app_auth;
 import '../utils/app_colors.dart';
-import 'main_shell.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,11 +18,9 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-
-  final _auth = AuthService();
-
-  bool _loading = false;
-  bool _hidePassword = true;
+  UserRole _role = UserRole.user;
+  bool _busy = false;
+  bool _hide = true;
 
   @override
   void dispose() {
@@ -30,34 +29,55 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _loading = true);
-
+    setState(() => _busy = true);
     try {
-      await _auth.login(_email.text, _password.text);
-
+      await context.read<app_auth.AuthProvider>().login(
+        _email.text,
+        _password.text,
+        expectedRole: _role,
+      );
+    } on app_auth.LoginRoleMismatchException {
       if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (route) => false,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Akun tidak sesuai dengan jenis login yang dipilih.'),
+        ),
+      );
+    } on app_auth.LoginProfileException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
       );
     } on FirebaseAuthException catch (e) {
-      _message(e.message ?? 'Login gagal.');
-    } catch (e) {
-      _message('Terjadi kesalahan: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_message(e.code))));
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_message(e.code))));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
-  void _message(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  String _message(String code) {
+    switch (code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+      case 'user-not-found':
+        return 'Email atau password salah.';
+      case 'permission-denied':
+        return 'Akun admin belum terdaftar dengan role yang benar di database. Hubungi pengelola.';
+      case 'too-many-requests':
+        return 'Terlalu banyak percobaan. Coba lagi nanti.';
+      default:
+        return 'Login gagal ($code).';
+    }
   }
 
   @override
@@ -67,130 +87,153 @@ class _LoginPageState extends State<LoginPage> {
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(25),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 90,
-                      height: 90,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.secondary],
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 90,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primary, AppColors.secondary],
+                          ),
+                          borderRadius: BorderRadius.circular(26),
                         ),
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                      child: const Icon(
-                        Icons.biotech,
-                        color: Colors.white,
-                        size: 48,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'Selamat Datang!',
-                    style: TextStyle(
-                      color: AppColors.navy,
-                      fontSize: 29,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  const Text(
-                    'Masuk untuk mengelola inventaris laboratorium.',
-                    style: TextStyle(color: AppColors.muted),
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'Email',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.email_outlined),
-                      hintText: 'Masukkan email',
-                    ),
-                    validator: (value) {
-                      if (value == null || !value.contains('@')) {
-                        return 'Masukkan email yang valid.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Password',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _password,
-                    obscureText: _hidePassword,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      hintText: 'Masukkan password',
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _hidePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                        child: const Icon(
+                          Icons.biotech,
+                          color: Colors.white,
+                          size: 48,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _hidePassword = !_hidePassword;
-                          });
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    const Text(
+                      'Selamat Datang!',
+                      style: TextStyle(
+                        color: AppColors.navy,
+                        fontSize: 29,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    const Text(
+                      'Pilih jenis akun untuk melanjutkan.',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
+                    const SizedBox(height: 30),
+                    Center(
+                      child: SegmentedButton<UserRole>(
+                        segments: const [
+                          ButtonSegment(
+                            value: UserRole.user,
+                            icon: Icon(Icons.person_outline),
+                            label: Text('Pengguna'),
+                          ),
+                          ButtonSegment(
+                            value: UserRole.admin,
+                            icon: Icon(Icons.admin_panel_settings_outlined),
+                            label: Text('Admin'),
+                          ),
+                        ],
+                        selected: {_role},
+                        onSelectionChanged: (selection) {
+                          setState(() => _role = selection.first);
                         },
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.length < 6) {
-                        return 'Password minimal 6 karakter.';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                    const SizedBox(height: 8),
+                    const Center(
+                      child: Text(
+                        'Akun admin hanya diberikan oleh pengelola.',
+                        style: TextStyle(color: AppColors.muted, fontSize: 11),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Email',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.email_outlined),
+                        hintText: 'Masukkan email',
+                      ),
+                      validator: (v) => (v == null || !v.contains('@'))
+                          ? 'Masukkan email yang valid.'
+                          : null,
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Password',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _password,
+                      obscureText: _hide,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        hintText: 'Masukkan password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _hide ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() => _hide = !_hide);
+                          },
                         ),
                       ),
-                      child: _loading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Login',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                      validator: (v) => (v == null || v.length < 6)
+                          ? 'Password minimal 6 karakter.'
+                          : null,
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterPage(),
+                    const SizedBox(height: 25),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: _busy ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
                           ),
-                        );
-                      },
-                      child: const Text('Belum punya akun? Daftar sekarang'),
+                        ),
+                        child: _busy
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'Login',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 15),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterPage(),
+                            ),
+                          );
+                        },
+                        child: const Text('Belum punya akun? Daftar sekarang'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
